@@ -67,6 +67,7 @@ func main() {
 
 func handleGetPowerLevels(w http.ResponseWriter, r *http.Request) {
 	log.Println("-->", r.Method, r.URL.Path)
+	w.Header().Set("Content-Type", "application/json")
 
 	// Technically, we should respond to other methods too
 	if r.Method != http.MethodGet {
@@ -75,15 +76,16 @@ func handleGetPowerLevels(w http.ResponseWriter, r *http.Request) {
 	}
 
 	roomId := r.PathValue("roomId")
+	userId := r.URL.Query().Get("user_id")
 
-	createEventRaw, err := getStateEvent(r.Context(), r.Header.Get("Authorization"), roomId, "m.room.create")
+	createEventRaw, err := getStateEvent(r.Context(), r.Header.Get("Authorization"), userId, roomId, "m.room.create")
 	if err != nil {
 		log.Println("Failed to get room create event:", err)
 		writeError(w, http.StatusInternalServerError, "M_UNKNOWN", "Failed to get room create event")
 		return
 	}
 
-	powerLevelsRaw, err := getStateEvent(r.Context(), r.Header.Get("Authorization"), roomId, "m.room.power_levels")
+	powerLevelsRaw, err := getStateEvent(r.Context(), r.Header.Get("Authorization"), userId, roomId, "m.room.power_levels")
 	if err != nil {
 		log.Println("Failed to get room power levels event:", err)
 		writeError(w, http.StatusInternalServerError, "M_UNKNOWN", "Failed to get room power levels event")
@@ -156,12 +158,15 @@ func writeError(w http.ResponseWriter, status int, errcode string, message strin
 	_, _ = w.Write(b)
 }
 
-func getStateEvent(ctx context.Context, auth string, roomId string, eventType string) (string, error) {
+func getStateEvent(ctx context.Context, auth string, asUserId string, roomId string, eventType string) (string, error) {
 	joined, err := url.JoinPath(c.DownstreamUrl, fmt.Sprintf("/_matrix/client/v3/rooms/%s/state/%s/", url.PathEscape(roomId), url.PathEscape(eventType)))
 	if err != nil {
 		return "", err
 	}
-	req, err := http.NewRequest(http.MethodGet, joined+"?format=event", nil)
+	if asUserId != "" {
+		asUserId = "&user_id=" + url.QueryEscape(asUserId)
+	}
+	req, err := http.NewRequest(http.MethodGet, joined+"?format=event"+asUserId, nil)
 	if err != nil {
 		return "", err
 	}
