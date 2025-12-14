@@ -52,6 +52,11 @@ func main() {
 
 	http.DefaultServeMux.HandleFunc("/_matrix/client/{endpointVersion}/rooms/{roomId}/m.room.power_levels", handleGetPowerLevels)
 	http.DefaultServeMux.HandleFunc("/_matrix/client/{endpointVersion}/rooms/{roomId}/m.room.power_levels/", handleGetPowerLevels)
+	http.DefaultServeMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("REJECT", r.Method, r.URL.Path)
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"errcode":"M_UNRECOGNIZED","error":"Not found"}`))
+	})
 
 	log.Println("Listening on", c.BindAddress)
 	err = http.ListenAndServe(c.BindAddress, nil)
