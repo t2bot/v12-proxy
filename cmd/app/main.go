@@ -50,8 +50,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	http.DefaultServeMux.HandleFunc("/_matrix/client/{endpointVersion}/rooms/{roomId}/m.room.power_levels", handleGetPowerLevels)
-	http.DefaultServeMux.HandleFunc("/_matrix/client/{endpointVersion}/rooms/{roomId}/m.room.power_levels/", handleGetPowerLevels)
+	http.DefaultServeMux.HandleFunc("/_matrix/client/{endpointVersion}/rooms/{roomId}/state/m.room.power_levels", handleGetPowerLevels)
+	http.DefaultServeMux.HandleFunc("/_matrix/client/{endpointVersion}/rooms/{roomId}/state/m.room.power_levels/", handleGetPowerLevels)
 	http.DefaultServeMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("REJECT", r.Method, r.URL.Path)
 		w.WriteHeader(http.StatusNotFound)
